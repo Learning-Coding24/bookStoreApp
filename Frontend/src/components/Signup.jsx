@@ -1,12 +1,13 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
 import Login from "./Login";
 import { useNavigate } from "react-router-dom";
 import { closeModalAndRedirect } from "../helper/closeModalAndRedirect ";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 function Signup() {
   const navigate = useNavigate();
-  const [name, setName] = useState("");
+  const [fullname, setFullname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({ name: "", email: "", password: "" });
@@ -18,8 +19,8 @@ function Signup() {
     const newErrors = { name: "", email: "", password: "" };
     let isValid = true;
     // name validation
-    if (!name) {
-      newErrors.name = "Name is required";
+    if (!fullname) {
+      newErrors.fullname = "Name is required";
       isValid = false;
     }
 
@@ -46,13 +47,35 @@ function Signup() {
   };
 
   // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent form from submitting by default
 
     if (validateForm()) {
-      // Form is valid, proceed with login
-      console.log("Form submitted successfully!");
-      navigate("/"); // Redirect after login (you can replace this with actual login logic)
+      const userInfo = {
+        fullname: fullname,
+        email: email,
+        password: password,
+      };
+
+      try {
+        const response = await axios.post(
+          "http://localhost:4001/user/signup",
+          userInfo
+        );
+
+        if (response.data) {
+          toast.success(response.data.message);
+          localStorage.setItem("Users", JSON.stringify(response.data.user)); // Show the response message in an alert
+          navigate("/");
+          window.location.reload();
+        }
+      } catch (error) {
+        if (error.response && error.response.data) {
+          toast.error(error.response.data.message); // Show error message if any
+        } else {
+          console.error("Error:", error.message);
+        }
+      }
     }
   };
 
@@ -76,8 +99,8 @@ function Signup() {
                 type="name"
                 placeholder="Enter your full name"
                 className="w-80 px-3 py-1 border rounded-md outline-none"
-                value={name}
-                onChange={(name) => setName(name.target.value)}
+                value={fullname}
+                onChange={(fullname) => setFullname(fullname.target.value)}
               />
               {errors.name && (
                 <p className="text-red-500 text-sm">{errors.name}</p>

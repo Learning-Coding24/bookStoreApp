@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { closeModalAndRedirect } from "../helper/closeModalAndRedirect ";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 function Login() {
   const navigate = useNavigate();
@@ -39,14 +41,39 @@ function Login() {
     return isValid;
   };
 
-  // Handle form submission
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault(); // Prevent form from submitting by default
 
     if (validateForm()) {
-      // Form is valid, proceed with login
-      console.log("Form submitted successfully!");
-      navigate("/"); // Redirect after login (you can replace this with actual login logic)
+      // Form is valid, proceed with the signup request
+
+      const userInfo = {
+        email: email,
+        password: password,
+      };
+
+      try {
+        const response = await axios.post(
+          "http://localhost:4001/user/login",
+          userInfo
+        );
+
+        if (response.data) {
+          toast.success(response.data.message);
+          localStorage.setItem("Users", JSON.stringify(response.data.user)); // Show the response message in an alert
+
+          setTimeout(() => {
+            window.location.reload();
+          }, 1000);
+        }
+      } catch (error) {
+        if (error.response && error.response.data) {
+          toast.error(error.response.data.message);
+        } else {
+          console.error("Error:", error.message);
+          setTimeout(() => {}, 1000);
+        }
+      }
     }
   };
 
